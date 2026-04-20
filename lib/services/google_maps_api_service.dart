@@ -1,19 +1,30 @@
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class GoogleMapsApiService {
   static const String _baseUrl = 'https://maps.googleapis.com/maps/api';
-  static const String _apiKey = String.fromEnvironment('MAPS_API_KEY');
+  static String? _apiKey;
 
-  static bool get isConfigured => _apiKey.isNotEmpty;
+  static bool get isConfigured => _apiKey != null && _apiKey!.isNotEmpty;
 
   static void _logMissingApiKey() {
-    print('Google Maps API key is not configured. Pass --dart-define=MAPS_API_KEY=your_key_here.');
+    print('Google Maps API key is not configured. Check your .env file.');
+  }
+
+  static void _loadApiKey() {
+    if (_apiKey == null) {
+      _apiKey = dotenv.env['MAPS_API_KEY'];
+      if (_apiKey == null || _apiKey!.isEmpty) {
+        print('Warning: MAPS_API_KEY not found in .env file');
+      }
+    }
   }
 
   // Geocoding API - Convert address to coordinates
   static Future<LatLng?> geocodeAddress(String address) async {
+    _loadApiKey();
     if (!isConfigured) {
       _logMissingApiKey();
       return null;
@@ -55,6 +66,7 @@ class GoogleMapsApiService {
 
   // Reverse Geocoding API - Convert coordinates to address
   static Future<String?> reverseGeocode(LatLng coordinates) async {
+    _loadApiKey();
     if (!isConfigured) {
       _logMissingApiKey();
       return null;
@@ -96,6 +108,7 @@ class GoogleMapsApiService {
     String? travelMode = 'driving', // driving, walking, bicycling, transit
     String? departureTime,
   }) async {
+    _loadApiKey();
     if (!isConfigured) {
       _logMissingApiKey();
       return null;
@@ -194,6 +207,7 @@ class GoogleMapsApiService {
     LatLng? location,
     double radius = 10000, // 10km radius
   }) async {
+    _loadApiKey();
     if (!isConfigured) {
       _logMissingApiKey();
       return [];
@@ -257,6 +271,7 @@ class GoogleMapsApiService {
     required String placeType,
     double radius = 1000, // meters
   }) async {
+    _loadApiKey();
     if (!isConfigured) {
       _logMissingApiKey();
       return [];
@@ -297,6 +312,7 @@ class GoogleMapsApiService {
 
   // Places Photos API - Get photo URL from photo reference
   static String getPhotoUrl(String photoReference, {int maxWidth = 400, int maxHeight = 400}) {
+    _loadApiKey();
     if (!isConfigured) {
       _logMissingApiKey();
       return '';
@@ -319,6 +335,7 @@ class GoogleMapsApiService {
 
   // Place Details API - Get detailed information about a place
   static Future<GooglePlaceDetails?> getPlaceDetails(String placeId) async {
+    _loadApiKey();
     if (!isConfigured) {
       _logMissingApiKey();
       return null;
