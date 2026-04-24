@@ -195,6 +195,7 @@ class _CreatePlanScreenState extends State<CreatePlanScreen> {
       setState(() {
         _itinerary[day] ??= [];
         _itinerary[day]!.add(result);
+        _destinationTimes[result.id] = '10:30 AM';
       });
       
       ScaffoldMessenger.of(context).showSnackBar(
@@ -337,22 +338,16 @@ class _CreatePlanScreenState extends State<CreatePlanScreen> {
     });
 
     try {
-      // Save the plan using the service with complete itinerary data
-      String? bannerImagePath;
-      
-      // Handle user-picked banner image
+      // Generate banner - use user's image or fallback
+      String bannerImagePath;
       if (_bannerImage != null) {
-        // In a real app, you'd upload this to a server and get a URL
-        // For now, create a consistent URL based on file name
-        final fileName = _bannerImage!.path.split('/').last;
-        final seed = '${_titleController.text.trim()}_$fileName';
-        bannerImagePath = 'https://picsum.photos/seed/$seed/400/200';
+        // Store the actual local file path to show user's image
+        bannerImagePath = _bannerImage!.path;
       } else {
-        // Generate a consistent banner image URL using fixed pattern
+        // Generate based on title + date
         final titleHash = _titleController.text.trim().hashCode.abs();
         final dateHash = _startDate!.millisecondsSinceEpoch.abs();
-        final seed = 'halaph_${titleHash}_$dateHash';
-        bannerImagePath = 'https://picsum.photos/seed/$seed/400/200';
+        bannerImagePath = 'https://picsum.photos/seed/halaph_${titleHash}_$dateHash/400/200';
       }
       
       final savedPlan = SimplePlanService.savePlan(
@@ -360,6 +355,7 @@ class _CreatePlanScreenState extends State<CreatePlanScreen> {
         startDate: _startDate!,
         endDate: _endDate!,
         itinerary: _itinerary,
+        destinationTimes: _destinationTimes,
         bannerImage: bannerImagePath,
       );
 
@@ -367,9 +363,8 @@ class _CreatePlanScreenState extends State<CreatePlanScreen> {
         SnackBar(content: Text('Plan "${savedPlan.title}" saved successfully!')),
       );
 
-      // Navigate to plan details screen using GoRouter with pushReplacement to prevent back
       if (mounted) {
-        context.pushReplacement('/plan-details?planId=${savedPlan.id}');
+        context.go('/plan-details?planId=${savedPlan.id}');
       }
     } catch (e) {
       if (mounted) {
@@ -884,48 +879,25 @@ class _CreatePlanScreenState extends State<CreatePlanScreen> {
 
   Widget _buildAlignedDestinationItem(Destination destination, int day, int index) {
     final time = _destinationTimes[destination.id] ?? '10:30 AM';
-    final isVisited = _visitedDestinations[destination.id] ?? false;
-    final isLastDestination = index == (_itinerary[day]?.length ?? 0) - 1;
     
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Circle on the left with absolute positioned line
+          // Circle indicator on the left
           Container(
             width: 40,
-            child: Stack(
-              children: [
-                // Background connecting line (doesn't affect positioning)
-                Positioned(
-                  left: 19, // Center of 40px container (20 - 1)
-                  top: 80, // Start from circle center
-                  child: Container(
-                    width: 2,
-                    height: 240, // Full card height (160) + margins (16 + 16) = 192, but add extra for spacing
-                    color: Colors.grey[300],
-                  ),
+            padding: const EdgeInsets.only(top: 80),
+            child: Center(
+              child: Container(
+                width: 16,
+                height: 16,
+                decoration: const BoxDecoration(
+                  color: Colors.blue,
+                  shape: BoxShape.circle,
                 ),
-                
-                // Circle (positioned normally)
-                Column(
-                  children: [
-                    const SizedBox(height: 80), // Center of 160px image
-                    Center(
-                      child: Container(
-                        width: 16,
-                        height: 16,
-                        decoration: BoxDecoration(
-                          color: isVisited ? Colors.orange : Colors.blue,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 80), // Rest of card height
-                  ],
-                ),
-              ],
+              ),
             ),
           ),
           
@@ -1133,7 +1105,7 @@ class _CreatePlanScreenState extends State<CreatePlanScreen> {
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                     decoration: BoxDecoration(
-                                      color: Colors.orange,
+                                      color: Colors.blue,
                                       borderRadius: BorderRadius.circular(20),
                                     ),
                                     child: Row(
@@ -1268,9 +1240,7 @@ class _CreatePlanScreenState extends State<CreatePlanScreen> {
               // Circles for this day's destinations - aligned with card centers
               ...List.generate(destinations.length, (destIndex) {
                 final destination = destinations[destIndex];
-                final isLastDestination = destIndex == destinations.length - 1;
                 final isCurrent = dayNumber == _currentVisibleDay && destIndex == _currentVisibleDestination;
-                final isVisited = _visitedDestinations[destination.id] ?? false;
                 
                 return Column(
                   children: [
@@ -1281,7 +1251,7 @@ class _CreatePlanScreenState extends State<CreatePlanScreen> {
                         width: isCurrent ? 20 : 16,
                         height: isCurrent ? 20 : 16,
                         decoration: BoxDecoration(
-                          color: isVisited ? Colors.orange : Colors.blue,
+                          color: Colors.blue,
                           shape: BoxShape.circle,
                           border: isCurrent ? Border.all(color: Colors.white, width: 2) : null,
                           boxShadow: isCurrent ? [
@@ -1527,7 +1497,7 @@ class _CreatePlanScreenState extends State<CreatePlanScreen> {
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: Colors.orange,
+                                    color: Colors.blue,
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Text(
@@ -1701,7 +1671,7 @@ class _CreatePlanScreenState extends State<CreatePlanScreen> {
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                   decoration: BoxDecoration(
-                                    color: Colors.orange,
+                                    color: Colors.blue,
                                     borderRadius: BorderRadius.circular(20),
                                   ),
                                   child: Row(

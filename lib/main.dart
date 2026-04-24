@@ -55,19 +55,11 @@ final GoRouter _router = GoRouter(
     ),
 
     GoRoute(
-
       path: '/plan-details',
-
       builder: (context, state) {
         final planId = state.uri.queryParameters['planId'];
-        if (planId != null && planId.isNotEmpty) {
-          // Load the plan from service
-          final plan = SimplePlanService.getPlanById(planId);
-          return PlanDetailsScreen(plan: plan);
-        }
-        return const PlanDetailsScreen(plan: null);
+        return PlanDetailsScreen(planId: planId);
       },
-
     ),
 
     GoRoute(
@@ -84,6 +76,11 @@ final GoRouter _router = GoRouter(
 
       builder: (context, state) => const CreatePlanScreen(),
 
+    ),
+
+    GoRoute(
+      path: '/my-plans',
+      builder: (context, state) => const MyPlansScreen(),
     ),
 
   ],

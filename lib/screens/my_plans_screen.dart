@@ -97,76 +97,118 @@ class _MyPlansScreenState extends State<MyPlansScreen> {
   }
 
   Widget _buildPlanCard(TravelPlan plan) {
-    return Card(
+    return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F5F5),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: InkWell(
+        onTap: () {
+          // Navigate to plan details
+          context.go('/plan-details?planId=${plan.id}');
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Row(
           children: [
-            Text(
-              plan.title,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '${plan.startDate.day}/${plan.startDate.month}/${plan.startDate.year} - ${plan.endDate.day}/${plan.endDate.month}/${plan.endDate.year}',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '${plan.itinerary.fold(0, (sum, day) => sum + day.items.length)} destinations',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.blue[600],
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    // Navigate to plan details
-                    context.push('/plan-details?planId=${plan.id}');
-                  },
-                  child: const Text('View Details'),
+            // Left blue bar
+            Container(
+              width: 4,
+              height: 80,
+              decoration: const BoxDecoration(
+                color: Color(0xFF64B5F6),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(12),
+                  bottomLeft: Radius.circular(12),
                 ),
-                const SizedBox(width: 12),
-                ElevatedButton(
-                  onPressed: () {
-                    // Edit plan - navigate to create plan with existing plan data
-                    // TODO: Implement edit functionality
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Edit functionality coming soon!')),
-                    );
-                  },
-                  child: const Text('Edit'),
+              ),
+            ),
+            // Content
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      plan.title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.calendar_today,
+                          size: 14,
+                          color: Colors.grey[600],
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          _formatDateRange(plan.startDate, plan.endDate),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                ElevatedButton(
-                  onPressed: () {
-                    // Delete plan
-                    _showDeleteConfirmation(context, plan);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
+              ),
+            ),
+            // Right side buttons
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Delete button
+                  IconButton(
+                    onPressed: () {
+                      _showDeleteConfirmation(context, plan);
+                    },
+                    icon: Icon(
+                      Icons.delete_outline,
+                      color: Colors.grey[600],
+                      size: 20,
+                    ),
+                    tooltip: 'Delete plan',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
                   ),
-                  child: const Text('Delete'),
-                ),
-              ],
+                  // Chevron
+                  Icon(
+                    Icons.chevron_right,
+                    color: Colors.grey[600],
+                    size: 20,
+                  ),
+                ],
+              ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  String _formatDateRange(DateTime startDate, DateTime endDate) {
+    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return '${months[startDate.month - 1]} ${startDate.day} - ${months[endDate.month - 1]} ${endDate.day}';
   }
 
   Widget _buildEmptyPlansPlaceholder(String message) {
